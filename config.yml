@@ -1,0 +1,11 @@
+is_debug: true
+listen:
+  type: port
+mongodb:
+  host: localhost
+  port: 27017
+  database: rest2
+  authdb:
+  user:
+  password:
+  collection: users
