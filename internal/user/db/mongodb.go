@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"github.com/POMBNK/restAPI/internal/pkg/apierror"
 	"github.com/POMBNK/restAPI/internal/user"
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,7 +45,7 @@ func (d *db) GetById(ctx context.Context, id string) (user.User, error) {
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			d.logs.Debug("No user found")
-			return res, nil
+			return res, apierror.ErrNotFound
 		}
 		return res, fmt.Errorf("failed to found user with id:%s due error: %w", id, err)
 	}
@@ -90,7 +91,7 @@ func (d *db) Update(ctx context.Context, user user.User) error {
 	}
 
 	if res.MatchedCount == 0 {
-		return fmt.Errorf("not found")
+		return apierror.ErrNotFound
 	}
 
 	return nil
@@ -108,7 +109,7 @@ func (d *db) Delete(ctx context.Context, id string) error {
 	}
 
 	if res.DeletedCount == 0 {
-		return fmt.Errorf("not found")
+		return apierror.ErrNotFound
 	}
 
 	return nil

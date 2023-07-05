@@ -1,6 +1,11 @@
 package apierror
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
+
+var ErrNotFound = New("Not found", "", "US-000404")
 
 type ApiError struct {
 	Description  string `json:"description"`
@@ -16,4 +21,19 @@ func New(description, developerMsg, code string) *ApiError {
 		DeveloperMsg: developerMsg,
 		Code:         code,
 	}
+}
+
+func (e *ApiError) Unwrap() error { return e.Err }
+
+func (e *ApiError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *ApiError) Marshal() []byte {
+	bytes, err := json.Marshal(e)
+	if err != nil {
+		return nil
+	}
+
+	return bytes
 }
