@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/POMBNK/restAPI/internal/user"
+	"github.com/POMBNK/restAPI/internal/user/db"
+	"github.com/POMBNK/restAPI/pkg/client/mongodb"
 	"github.com/POMBNK/restAPI/pkg/config"
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"github.com/julienschmidt/httprouter"
@@ -32,16 +35,14 @@ func main() {
 	logs.Println("Router initialization...")
 	router := httprouter.New()
 	logs.Println("Router initialized.")
-	//mongoDatabase, err := mongodb.NewClient(context.Background(), cfg.MongoDB.Host, cfg.MongoDB.Port, cfg.MongoDB.User,
-	//	cfg.MongoDB.Password, cfg.MongoDB.Database, cfg.MongoDB.AuthDB)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//mongoStorage := db.New(mongoDatabase, cfg.MongoDB.Collection, logs)
-
-	handler := user.NewHandler(logs)
-	//service :=
-
+	mongoDatabase, err := mongodb.NewClient(context.Background(), cfg.MongoDB.Host, cfg.MongoDB.Port, cfg.MongoDB.User,
+		cfg.MongoDB.Password, cfg.MongoDB.Database, cfg.MongoDB.AuthDB)
+	if err != nil {
+		panic(err)
+	}
+	mongoStorage := db.New(mongoDatabase, cfg.MongoDB.Collection, logs)
+	service := user.NewService(mongoStorage, logs)
+	handler := user.NewHandler(logs, service)
 	handler.Register(router)
 
 	logs.Infof("Starting app...")
