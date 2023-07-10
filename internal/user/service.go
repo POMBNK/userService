@@ -27,7 +27,7 @@ func (s service) Create(ctx context.Context, dto ToCreateUserDTO) (string, error
 	if err != nil {
 		return "", fmt.Errorf("failled due hashing password error:%w", err)
 	}
-	dto.Password = pswrd
+	user.PasswordHash = pswrd
 	uuid, err := s.storage.Create(ctx, user)
 	//TODO: Check if errors are correct
 	if err != nil {
@@ -54,20 +54,37 @@ func (s service) GetAll(ctx context.Context) ([]User, error) {
 
 	return users, nil
 }
+
 func (s service) Update(ctx context.Context, dto ToUpdateUserDTO) error {
-	user := UpdateUserDto(dto)
-
-	pswrd, err := hashPassword(dto.Password)
-	if err != nil {
-		return fmt.Errorf("failled due hashing password error:%w", err)
-	}
-	user.PasswordHash = pswrd
-
-	err = s.storage.Update(ctx, user)
+	var updUser User
+	var pswrd string
+	s.logs.Debug("get user by uuid")
+	user, err := s.GetById(ctx, dto.ID)
 	if err != nil {
 		return err
 	}
-
+	if dto.UserName == "" {
+		dto.UserName = user.UserName
+	}
+	if dto.Email == "" {
+		dto.Email = user.Email
+	}
+	//TODO: Compare old and new password. Change DTO model.
+	if dto.Password == "" {
+		dto.Password = user.PasswordHash
+		pswrd = user.PasswordHash
+	} else {
+		pswrd, err = hashPassword(dto.Password)
+		if err != nil {
+			return fmt.Errorf("failled due hashing password error:%w", err)
+		}
+	}
+	updUser = UpdateUserDto(dto)
+	updUser.PasswordHash = pswrd
+	err = s.storage.Update(ctx, updUser)
+	if err != nil {
+		return err
+	}
 	return err
 }
 

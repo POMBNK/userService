@@ -9,15 +9,15 @@ type User struct {
 
 type ToCreateUserDTO struct {
 	UserName string `json:"username" bson:"username"`
-	Password string `json:"-" bson:"password"`
+	Password string `json:"password" bson:"password"`
 	Email    string `json:"email" bson:"email"`
 }
 
 type ToUpdateUserDTO struct {
-	ID       string `json:"ID" bson:"_id,omitempty"`
-	UserName string `json:"username" bson:"username"`
-	Password string `json:"-" bson:"password"`
-	Email    string `json:"email" bson:"email"`
+	ID       string `json:"ID,omitempty" bson:"_id,omitempty"`
+	UserName string `json:"username,omitempty" bson:"username"`
+	Password string `json:"password,omitempty" bson:"password"`
+	Email    string `json:"email,omitempty" bson:"email"`
 }
 
 func CreateUserDto(dto ToCreateUserDTO) User {
