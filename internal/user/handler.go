@@ -33,10 +33,9 @@ func (h *handler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodGet, usersURL, apierror.Middleware(h.GetUsersList))
 	r.HandlerFunc(http.MethodGet, userURL, apierror.Middleware(h.GetUserByID))
 	//Create
-	r.HandlerFunc(http.MethodPost, userURL, apierror.Middleware(h.CreateUser))
+	r.HandlerFunc(http.MethodPost, usersURL, apierror.Middleware(h.CreateUser))
 	//Update
-	r.HandlerFunc(http.MethodPut, userURL, apierror.Middleware(h.UpdateUser))            // Full update
-	r.HandlerFunc(http.MethodPatch, userURL, apierror.Middleware(h.PartiallyUpdateUser)) // Partial update
+	r.HandlerFunc(http.MethodPut, userURL, apierror.Middleware(h.UpdateUser)) // particularly update
 	//Delete
 	r.HandlerFunc(http.MethodDelete, userURL, apierror.Middleware(h.DeleteUserByID))
 }
@@ -53,8 +52,8 @@ func (h *handler) GetUsersList(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("failed to marshall users due error:%w", err)
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Write(usersbytes)
+	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
@@ -69,25 +68,52 @@ func (h *handler) GetUserByID(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshall user due error:%w", err)
 	}
-	w.WriteHeader(http.StatusOK)
+
 	w.Write(userBytes)
+	w.WriteHeader(http.StatusOK)
 
 	return nil
 }
 
 func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) error {
-	w.Write([]byte("User created"))
+	var userDto ToCreateUserDTO
+	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
+		return fmt.Errorf("failled to decode body from json body due error:%w", err)
+	}
+
+	userId, err := h.service.Create(r.Context(), userDto)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("%s/%s", usersURL, userId))
+	w.WriteHeader(http.StatusCreated)
 	return nil
 }
 func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
-	w.Write([]byte("user was updated"))
+	params := r.Context().Value(httprouter.ParamsKey).(httprouter.Params)
+	userUUID := params.ByName(id)
+
+	var userDto ToUpdateUserDTO
+	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
+		return fmt.Errorf("failled to decode body from json body due error:%w", err)
+	}
+	userDto.ID = userUUID
+	if err := h.service.Update(r.Context(), userDto); err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+
 	return nil
 }
-func (h *handler) PartiallyUpdateUser(w http.ResponseWriter, r *http.Request) error {
-	w.Write([]byte("user was partially updated"))
-	return nil
-}
+
 func (h *handler) DeleteUserByID(w http.ResponseWriter, r *http.Request) error {
-	w.Write([]byte("user was deleted"))
+	params := r.Context().Value(httprouter.ParamsKey).(httprouter.Params)
+	userUUID := params.ByName(id)
+	if err := h.service.Delete(r.Context(), userUUID); err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
