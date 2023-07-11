@@ -1,11 +1,22 @@
 is_debug: true
 listen:
   type: port
-mongodb:
-  host: localhost
-  port: 27017
-  database: rest2
-  authdb:
-  user:
-  password:
-  collection: users
+  bind_ip: 0.0.0.0
+  port: 10005
+storage:
+  type: mongo
+  mongodb:
+    host: localhost
+    port: 27017
+    database: rest2
+    authdb:
+    user:
+    password:
+    collection: users
+  postgesql:
+    host:
+    port:
+    database:
+    user:
+    password:
+

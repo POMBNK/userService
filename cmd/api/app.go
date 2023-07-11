@@ -35,13 +35,8 @@ func main() {
 	logs.Println("Router initialization...")
 	router := httprouter.New()
 	logs.Println("Router initialized.")
-	mongoDatabase, err := mongodb.NewClient(context.Background(), cfg.MongoDB.Host, cfg.MongoDB.Port, cfg.MongoDB.User,
-		cfg.MongoDB.Password, cfg.MongoDB.Database, cfg.MongoDB.AuthDB)
-	if err != nil {
-		panic(err)
-	}
-	mongoStorage := db.New(mongoDatabase, cfg.MongoDB.Collection, logs)
-	service := user.NewService(mongoStorage, logs)
+	storage := getStorage(cfg, logs)
+	service := user.NewService(storage, logs)
 	handler := user.NewHandler(logs, service)
 	handler.Register(router)
 
@@ -94,4 +89,21 @@ func start(logs *logger.Logger, router *httprouter.Router, cfg *config.Config) {
 		logs.Fatalf("Server error:%s", err)
 	}
 
+}
+
+func getStorage(cfg *config.Config, logs *logger.Logger) user.Storage {
+	storage := cfg.Storage
+	switch storage.Type {
+	case "mongo":
+		mongoDatabase, err := mongodb.NewClient(context.Background(), storage.MongoDB.Host, storage.MongoDB.Port, storage.MongoDB.User,
+			storage.MongoDB.Password, storage.MongoDB.Database, storage.MongoDB.AuthDB)
+		if err != nil {
+			panic(err)
+		}
+		mongoStorage := db.New(mongoDatabase, cfg.Storage.MongoDB.Collection, logs)
+		return mongoStorage
+	default:
+		logs.Fatalln("incorrect database type")
+		return nil
+	}
 }
