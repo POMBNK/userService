@@ -19,7 +19,7 @@ type Client interface {
 	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
-func NewClient(ctx context.Context, cfg config.Config) (*pgxpool.Pool, error) {
+func NewClient(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
 	var pool *pgxpool.Pool
 	var err error
 	data := cfg.Storage.Postgresql

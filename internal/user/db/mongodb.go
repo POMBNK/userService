@@ -15,12 +15,12 @@ const (
 	idKey = "_id"
 )
 
-type db struct {
+type mongoDB struct {
 	collection *mongo.Collection
 	logs       *logger.Logger
 }
 
-func (d *db) Create(ctx context.Context, user user.User) (string, error) {
+func (d *mongoDB) Create(ctx context.Context, user user.User) (string, error) {
 	d.logs.Debug("Create user...")
 	res, err := d.collection.InsertOne(ctx, user)
 	if err != nil {
@@ -34,7 +34,7 @@ func (d *db) Create(ctx context.Context, user user.User) (string, error) {
 	return oid.Hex(), nil
 }
 
-func (d *db) GetById(ctx context.Context, id string) (user.User, error) {
+func (d *mongoDB) GetById(ctx context.Context, id string) (user.User, error) {
 	var res user.User
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -52,7 +52,7 @@ func (d *db) GetById(ctx context.Context, id string) (user.User, error) {
 	return res, nil
 }
 
-func (d *db) GetAll(ctx context.Context) ([]user.User, error) {
+func (d *mongoDB) GetAll(ctx context.Context) ([]user.User, error) {
 	cursor, err := d.collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, fmt.Errorf("can't find fields due with error: %w ", err)
@@ -65,7 +65,7 @@ func (d *db) GetAll(ctx context.Context) ([]user.User, error) {
 	return listOfUsers, nil
 }
 
-func (d *db) Update(ctx context.Context, user user.User) error {
+func (d *mongoDB) Update(ctx context.Context, user user.User) error {
 	oid, err := primitive.ObjectIDFromHex(user.ID)
 	if err != nil {
 		return fmt.Errorf("error failed to convert ID hex to object ID")
@@ -97,7 +97,7 @@ func (d *db) Update(ctx context.Context, user user.User) error {
 	return nil
 }
 
-func (d *db) Delete(ctx context.Context, id string) error {
+func (d *mongoDB) Delete(ctx context.Context, id string) error {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("error failed to convert ID hex to object ID")
@@ -115,8 +115,8 @@ func (d *db) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func New(database *mongo.Database, collection string, logs *logger.Logger) user.Storage {
-	return &db{
+func NewMongoDB(database *mongo.Database, collection string, logs *logger.Logger) user.Storage {
+	return &mongoDB{
 		collection: database.Collection(collection),
 		logs:       logs,
 	}

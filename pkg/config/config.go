@@ -17,7 +17,7 @@ type Config struct {
 		Type       string
 		MongoDB    MongoDB    `json:"mongodb"`
 		Postgresql Postgresql `json:"postgresql"`
-	}
+	} `yaml:"storage"`
 }
 type MongoDB struct {
 	Host       string `json:"host"`

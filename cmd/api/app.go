@@ -6,6 +6,7 @@ import (
 	"github.com/POMBNK/restAPI/internal/user"
 	"github.com/POMBNK/restAPI/internal/user/db"
 	"github.com/POMBNK/restAPI/pkg/client/mongodb"
+	"github.com/POMBNK/restAPI/pkg/client/postgresql"
 	"github.com/POMBNK/restAPI/pkg/config"
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"github.com/julienschmidt/httprouter"
@@ -98,10 +99,17 @@ func getStorage(cfg *config.Config, logs *logger.Logger) user.Storage {
 		mongoDatabase, err := mongodb.NewClient(context.Background(), storage.MongoDB.Host, storage.MongoDB.Port, storage.MongoDB.User,
 			storage.MongoDB.Password, storage.MongoDB.Database, storage.MongoDB.AuthDB)
 		if err != nil {
-			panic(err)
+			logs.Fatalln(err)
 		}
-		mongoStorage := db.New(mongoDatabase, cfg.Storage.MongoDB.Collection, logs)
+		mongoStorage := db.NewMongoDB(mongoDatabase, cfg.Storage.MongoDB.Collection, logs)
 		return mongoStorage
+	case "sql":
+		pool, err := postgresql.NewClient(context.Background(), cfg)
+		if err != nil {
+			logs.Fatalln(err)
+		}
+		sqlStorage := db.NewPostgresDB(pool)
+		return sqlStorage
 	default:
 		logs.Fatalln("incorrect database type")
 		return nil
