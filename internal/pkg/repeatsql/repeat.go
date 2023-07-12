@@ -3,7 +3,7 @@ package repeatsql
 import "time"
 
 func Again(fn func() error, attempts int, delay time.Duration) error {
-	for attempts < 0 {
+	for attempts > 0 {
 		err := fn()
 		if err != nil {
 			time.Sleep(delay)
