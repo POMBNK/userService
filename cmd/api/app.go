@@ -104,11 +104,11 @@ func getStorage(cfg *config.Config, logs *logger.Logger) user.Storage {
 		mongoStorage := db.NewMongoDB(mongoDatabase, cfg.Storage.MongoDB.Collection, logs)
 		return mongoStorage
 	case "sql":
-		pool, err := postgresql.NewClient(context.Background(), cfg)
+		client, err := postgresql.NewClient(context.Background(), cfg)
 		if err != nil {
 			logs.Fatalln(err)
 		}
-		sqlStorage := db.NewPostgresDB(pool)
+		sqlStorage := db.NewPostgresDB(client, logs)
 		return sqlStorage
 	default:
 		logs.Fatalln("incorrect database type")

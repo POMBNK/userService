@@ -20,7 +20,7 @@ type service struct {
 	logs    *logger.Logger
 }
 
-func (s service) Create(ctx context.Context, dto ToCreateUserDTO) (string, error) {
+func (s *service) Create(ctx context.Context, dto ToCreateUserDTO) (string, error) {
 	user := CreateUserDto(dto)
 
 	pswrd, err := hashPassword(dto.Password)
@@ -37,7 +37,7 @@ func (s service) Create(ctx context.Context, dto ToCreateUserDTO) (string, error
 	return uuid, nil
 }
 
-func (s service) GetById(ctx context.Context, id string) (User, error) {
+func (s *service) GetById(ctx context.Context, id string) (User, error) {
 	user, err := s.storage.GetById(ctx, id)
 	if err != nil {
 		return User{}, err
@@ -46,7 +46,7 @@ func (s service) GetById(ctx context.Context, id string) (User, error) {
 	return user, nil
 }
 
-func (s service) GetAll(ctx context.Context) ([]User, error) {
+func (s *service) GetAll(ctx context.Context) ([]User, error) {
 	users, err := s.storage.GetAll(ctx)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (s service) GetAll(ctx context.Context) ([]User, error) {
 	return users, nil
 }
 
-func (s service) Update(ctx context.Context, dto ToUpdateUserDTO) error {
+func (s *service) Update(ctx context.Context, dto ToUpdateUserDTO) error {
 	var updUser User
 	var pswrd string
 	s.logs.Debug("get user by uuid")
@@ -88,7 +88,7 @@ func (s service) Update(ctx context.Context, dto ToUpdateUserDTO) error {
 	return err
 }
 
-func (s service) Delete(ctx context.Context, id string) error {
+func (s *service) Delete(ctx context.Context, id string) error {
 
 	err := s.storage.Delete(ctx, id)
 	if err != nil {

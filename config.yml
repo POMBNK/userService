@@ -4,7 +4,7 @@ listen:
   bind_ip: 0.0.0.0
   port: 10005
 storage:
-  type: mongo
+  type: sql
   mongodb:
     host: localhost
     port: 27017
@@ -13,8 +13,8 @@ storage:
     user:
     password:
     collection: users
-  postgesql:
-    host: localhost
+  postgresql:
+    host: 0.0.0.0
     port: 5432
     database: postgres
     user: postgres
