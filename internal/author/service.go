@@ -73,6 +73,6 @@ func (s *service) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func newService(storage Storage, logs *logger.Logger) Service {
+func NewService(storage Storage, logs *logger.Logger) Service {
 	return &service{storage: storage, logs: logs}
 }

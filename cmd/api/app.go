@@ -36,6 +36,7 @@ func main() {
 	logs.Println("Router initialization...")
 	router := httprouter.New()
 	logs.Println("Router initialized.")
+	//TODO:problem with implementing storage for any entity other than user, should use global storage interface or smth...
 	storage := getStorage(cfg, logs)
 	service := user.NewService(storage, logs)
 	handler := user.NewHandler(logs, service)

@@ -41,6 +41,8 @@ func (h *handler) Register(r *httprouter.Router) {
 }
 
 func (h *handler) GetUsersList(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
 	h.logs.Infof("GetUsersListsMethod")
 	users, err := h.service.GetAll(r.Context())
 	if err != nil {
@@ -54,10 +56,13 @@ func (h *handler) GetUsersList(w http.ResponseWriter, r *http.Request) error {
 
 	w.Write(usersbytes)
 	w.WriteHeader(http.StatusOK)
+
 	return nil
 }
 
 func (h *handler) GetUserByID(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
 	params := r.Context().Value(httprouter.ParamsKey).(httprouter.Params)
 	userUUID := params.ByName(id)
 	user, err := h.service.GetById(r.Context(), userUUID)
@@ -76,6 +81,8 @@ func (h *handler) GetUserByID(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
 	var userDto ToCreateUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)
@@ -88,9 +95,12 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Location", fmt.Sprintf("%s/%s", usersURL, userId))
 	w.WriteHeader(http.StatusCreated)
+
 	return nil
 }
 func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
 	params := r.Context().Value(httprouter.ParamsKey).(httprouter.Params)
 	userUUID := params.ByName(id)
 
@@ -109,11 +119,14 @@ func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *handler) DeleteUserByID(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
 	params := r.Context().Value(httprouter.ParamsKey).(httprouter.Params)
 	userUUID := params.ByName(id)
 	if err := h.service.Delete(r.Context(), userUUID); err != nil {
 		return err
 	}
 	w.WriteHeader(http.StatusNoContent)
+
 	return nil
 }

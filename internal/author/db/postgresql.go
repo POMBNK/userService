@@ -30,7 +30,7 @@ func (d *postgresDB) Create(ctx context.Context, author author.Author) (string, 
 func (d *postgresDB) GetById(ctx context.Context, id string) (author.Author, error) {
 	q := `SELECT id,name,surname FROM authors WHERE id = $1`
 	var authorUnit author.Author
-	err := d.client.QueryRow(ctx, q, id).Scan(&authorUnit.Id, authorUnit.Name, authorUnit.SurName)
+	err := d.client.QueryRow(ctx, q, id).Scan(&authorUnit.Id, &authorUnit.Name, &authorUnit.SurName)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return author.Author{}, apierror.ErrNotFound
