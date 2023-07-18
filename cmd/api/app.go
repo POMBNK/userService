@@ -9,6 +9,7 @@ import (
 	"github.com/POMBNK/restAPI/pkg/client/postgresql"
 	"github.com/POMBNK/restAPI/pkg/config"
 	"github.com/POMBNK/restAPI/pkg/logger"
+	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 	"net"
 	"net/http"
@@ -28,6 +29,10 @@ const (
 func main() {
 	logs := logger.GetLogger()
 	logs.Println("Logger initialized.")
+
+	if err := godotenv.Load(); err != nil {
+		logs.Fatalln("Can't load .env file")
+	}
 
 	logs.Println("Config initialization...")
 	cfg := config.GetCfg()
