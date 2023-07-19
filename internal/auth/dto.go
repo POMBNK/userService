@@ -1,19 +1,17 @@
 package auth
 
-type ToCreateUserDTO struct {
+type ToSignUpUserDTO struct {
 	UserName string `json:"username" bson:"username"`
 	Password string `json:"password" bson:"password"`
 	Email    string `json:"email" bson:"email"`
 }
 
-type ToUpdateUserDTO struct {
-	ID       string `json:"ID,omitempty" bson:"_id,omitempty"`
-	UserName string `json:"username,omitempty" bson:"username"`
-	Password string `json:"password,omitempty" bson:"password"`
-	Email    string `json:"email,omitempty" bson:"email"`
+type ToSignInUserDTO struct {
+	Email    string `json:"email" bson:"email"`
+	Password string `json:"password" bson:"password"`
 }
 
-func CreateUserDto(dto ToCreateUserDTO) User {
+func CreateSignUpUserDto(dto ToSignUpUserDTO) User {
 	return User{
 		UserName:     dto.UserName,
 		PasswordHash: dto.Password,
@@ -21,10 +19,8 @@ func CreateUserDto(dto ToCreateUserDTO) User {
 	}
 }
 
-func UpdateUserDto(dto ToUpdateUserDTO) User {
+func CreateSignInUserDto(dto ToSignInUserDTO) User {
 	return User{
-		ID:           dto.ID,
-		UserName:     dto.UserName,
 		PasswordHash: dto.Password,
 		Email:        dto.Email,
 	}

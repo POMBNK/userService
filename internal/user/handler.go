@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/POMBNK/restAPI/internal/handlers"
 	"github.com/POMBNK/restAPI/internal/pkg/apierror"
+	"github.com/POMBNK/restAPI/pkg/auth/jwt"
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
+	"os"
 )
 
 const (
@@ -37,7 +39,7 @@ func (h *handler) Register(r *httprouter.Router) {
 	//Update
 	r.HandlerFunc(http.MethodPut, userURL, apierror.Middleware(h.UpdateUser)) // particularly update
 	//Delete
-	r.HandlerFunc(http.MethodDelete, userURL, apierror.Middleware(h.DeleteUserByID))
+	r.HandlerFunc(http.MethodDelete, userURL, jwt.Middleware(apierror.Middleware(h.DeleteUserByID), os.Getenv("SECRET")))
 }
 
 func (h *handler) GetUsersList(w http.ResponseWriter, r *http.Request) error {

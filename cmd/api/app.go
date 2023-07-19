@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/POMBNK/restAPI/internal/auth"
+	authDB "github.com/POMBNK/restAPI/internal/auth/db"
 	"github.com/POMBNK/restAPI/internal/user"
-	"github.com/POMBNK/restAPI/internal/user/db"
-	"github.com/POMBNK/restAPI/pkg/client/mongodb"
+	userDB "github.com/POMBNK/restAPI/internal/user/db"
 	"github.com/POMBNK/restAPI/pkg/client/postgresql"
 	"github.com/POMBNK/restAPI/pkg/config"
 	"github.com/POMBNK/restAPI/pkg/logger"
@@ -42,10 +43,23 @@ func main() {
 	router := httprouter.New()
 	logs.Println("Router initialized.")
 	//TODO:problem with implementing storage for any entity other than user, should use global storage interface or smth...
-	storage := getStorage(cfg, logs)
-	service := user.NewService(storage, logs)
-	handler := user.NewHandler(logs, service)
-	handler.Register(router)
+	//storage := getStorage(cfg, logs)
+	client, err := postgresql.NewClient(context.Background(), cfg)
+	if err != nil {
+		logs.Fatalln(err)
+	}
+
+	//users
+	userStorage := userDB.NewPostgresDB(client, logs)
+	userService := user.NewService(userStorage, logs)
+	userHandler := user.NewHandler(logs, userService)
+	userHandler.Register(router)
+
+	// auth
+	authStorage := authDB.NewPostgresDB(client, logs)
+	authService := auth.NewService(authStorage, logs)
+	authHandler := auth.NewHandler(logs, authService)
+	authHandler.Register(router)
 
 	logs.Infof("Starting app...")
 	start(logs, router, cfg)
@@ -98,26 +112,26 @@ func start(logs *logger.Logger, router *httprouter.Router, cfg *config.Config) {
 
 }
 
-func getStorage(cfg *config.Config, logs *logger.Logger) user.Storage {
-	storage := cfg.Storage
-	switch storage.Type {
-	case "mongo":
-		mongoDatabase, err := mongodb.NewClient(context.Background(), storage.MongoDB.Host, storage.MongoDB.Port, storage.MongoDB.User,
-			storage.MongoDB.Password, storage.MongoDB.Database, storage.MongoDB.AuthDB)
-		if err != nil {
-			logs.Fatalln(err)
-		}
-		mongoStorage := db.NewMongoDB(mongoDatabase, cfg.Storage.MongoDB.Collection, logs)
-		return mongoStorage
-	case "sql":
-		client, err := postgresql.NewClient(context.Background(), cfg)
-		if err != nil {
-			logs.Fatalln(err)
-		}
-		sqlStorage := db.NewPostgresDB(client, logs)
-		return sqlStorage
-	default:
-		logs.Fatalln("incorrect database type")
-		return nil
-	}
-}
+//func getStorage(cfg *config.Config, logs *logger.Logger) user.Storage {
+//	storage := cfg.Storage
+//	switch storage.Type {
+//	case "mongo":
+//		mongoDatabase, err := mongodb.NewClient(context.Background(), storage.MongoDB.Host, storage.MongoDB.Port, storage.MongoDB.User,
+//			storage.MongoDB.Password, storage.MongoDB.Database, storage.MongoDB.AuthDB)
+//		if err != nil {
+//			logs.Fatalln(err)
+//		}
+//		mongoStorage := db.NewMongoDB(mongoDatabase, cfg.Storage.MongoDB.Collection, logs)
+//		return mongoStorage
+//	case "sql":
+//		client, err := postgresql.NewClient(context.Background(), cfg)
+//		if err != nil {
+//			logs.Fatalln(err)
+//		}
+//		sqlStorage := db.NewPostgresDB(client, logs)
+//		return sqlStorage
+//	default:
+//		logs.Fatalln("incorrect database type")
+//		return nil
+//	}
+//}

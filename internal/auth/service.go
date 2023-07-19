@@ -8,8 +8,8 @@ import (
 )
 
 type Service interface {
-	SignUP(ctx context.Context, dto ToCreateUserDTO) (string, error)
-	SignIN(ctx context.Context, id string) (User, error)
+	SignUP(ctx context.Context, dto ToSignUpUserDTO) (string, error)
+	SignIN(ctx context.Context, dto ToSignInUserDTO) (User, error)
 }
 
 type service struct {
@@ -17,8 +17,8 @@ type service struct {
 	logs    *logger.Logger
 }
 
-func (s *service) SignUP(ctx context.Context, dto ToCreateUserDTO) (string, error) {
-	user := CreateUserDto(dto)
+func (s *service) SignUP(ctx context.Context, dto ToSignUpUserDTO) (string, error) {
+	user := CreateSignUpUserDto(dto)
 
 	pswrd, err := hashPassword(dto.Password)
 	if err != nil {
@@ -29,13 +29,22 @@ func (s *service) SignUP(ctx context.Context, dto ToCreateUserDTO) (string, erro
 	if err != nil {
 		return uuid, err
 	}
-	//TODO: create pair of JWT token
+
 	return uuid, nil
 }
 
-func (s *service) SignIN(ctx context.Context, id string) (User, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *service) SignIN(ctx context.Context, dto ToSignInUserDTO) (User, error) {
+
+	user, err := s.storage.GetByEmail(ctx, dto.Email)
+	if err != nil {
+		return User{}, fmt.Errorf("incorrect email or password")
+	}
+
+	if err = validatePassword(dto.Password, user.PasswordHash); err != nil {
+		return User{}, err
+	}
+
+	return user, nil
 }
 
 func hashPassword(password string) (string, error) {
@@ -46,6 +55,15 @@ func hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func New() Service {
-	return &service{}
+func validatePassword(password, hashedPassword string) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); err != nil {
+		return fmt.Errorf("Incorrect password")
+	}
+	return nil
+}
+func NewService(storage Storage, logs *logger.Logger) Service {
+	return &service{
+		storage: storage,
+		logs:    logs,
+	}
 }

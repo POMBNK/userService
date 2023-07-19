@@ -43,6 +43,19 @@ func (d *postgresDB) GetById(ctx context.Context, id string) (auth.User, error) 
 	return userUnit, nil
 }
 
+func (d *postgresDB) GetByEmail(ctx context.Context, email string) (auth.User, error) {
+	var userUnit auth.User
+	q := `SELECT id,username,password_hash,email FROM users WHERE email = $1`
+	err := d.client.QueryRow(ctx, q, email).Scan(&userUnit.ID, &userUnit.UserName, &userUnit.PasswordHash, &userUnit.Email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return auth.User{}, apierror.ErrNotFound
+		}
+		return auth.User{}, err
+	}
+	return userUnit, nil
+}
+
 func NewPostgresDB(client postgresql.Client, logs *logger.Logger) auth.Storage {
 	return &postgresDB{
 		client: client,
