@@ -40,6 +40,7 @@ func (h *handler) SignIn(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	var userDto ToSignInUserDTO
+	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)
 	}
@@ -74,6 +75,7 @@ func (h *handler) SignIn(w http.ResponseWriter, r *http.Request) error {
 func (h *handler) SignUp(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json")
 
+	defer r.Body.Close()
 	var userDto ToSignUpUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)

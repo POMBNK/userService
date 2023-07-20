@@ -86,6 +86,7 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	var userDto ToCreateUserDTO
+	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)
 	}
@@ -107,6 +108,7 @@ func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 	userUUID := params.ByName(id)
 
 	var userDto ToUpdateUserDTO
+	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)
 	}
