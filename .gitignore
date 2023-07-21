@@ -2,3 +2,4 @@
 .env
 logs/
 .log
+data_db.sql

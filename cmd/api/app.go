@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/POMBNK/restAPI/internal/auth"
 	authDB "github.com/POMBNK/restAPI/internal/auth/db"
+	"github.com/POMBNK/restAPI/internal/book"
+	bookDB "github.com/POMBNK/restAPI/internal/book/db"
 	"github.com/POMBNK/restAPI/internal/user"
 	userDB "github.com/POMBNK/restAPI/internal/user/db"
 	"github.com/POMBNK/restAPI/pkg/client/postgresql"
@@ -60,6 +62,12 @@ func main() {
 	authService := auth.NewService(authStorage, logs)
 	authHandler := auth.NewHandler(logs, authService)
 	authHandler.Register(router)
+
+	//book
+	bookStorage := bookDB.NewPostgresDB(client, logs)
+	bookService := book.NewService(bookStorage, logs)
+	bookHandler := book.NewHandler(bookService, logs)
+	bookHandler.Register(router)
 
 	logs.Infof("Starting app...")
 	start(logs, router, cfg)
