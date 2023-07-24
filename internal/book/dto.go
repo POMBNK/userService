@@ -17,6 +17,10 @@ type ToUpdateBookDTO struct {
 	AuthorID author.Author `json:"authorID"`
 }
 
+type ToFindByNameDTO struct {
+	Name string `json:"name"`
+}
+
 func CreateBookDto(dto ToCreateBookDTO) Book {
 	return Book{
 		Name:     dto.Name,

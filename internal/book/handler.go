@@ -10,7 +10,11 @@ import (
 	"net/http"
 )
 
-const bookURL = "/api/books/"
+const (
+	id       = "uuid"
+	booksURL = "/api/books/"
+	bookURL  = "/api/books/:uuid"
+)
 
 type handler struct {
 	service Service
@@ -18,7 +22,9 @@ type handler struct {
 }
 
 func (h *handler) Register(r *httprouter.Router) {
-	r.HandlerFunc(http.MethodPost, bookURL, apierror.Middleware(h.CreateBook))
+	r.HandlerFunc(http.MethodPost, booksURL, apierror.Middleware(h.CreateBook))
+	r.HandlerFunc(http.MethodGet, bookURL, apierror.Middleware(h.GetBookByID))
+	r.HandlerFunc(http.MethodGet, booksURL, apierror.Middleware(h.GetBookByName))
 }
 
 func (h *handler) CreateBook(w http.ResponseWriter, r *http.Request) error {
@@ -36,6 +42,51 @@ func (h *handler) CreateBook(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Location", fmt.Sprintf("%s/%s", bookURL, bookId))
 	w.WriteHeader(http.StatusCreated)
+	return nil
+}
+
+func (h *handler) GetBookByID(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
+	params := r.Context().Value(httprouter.ParamsKey).(httprouter.Params)
+	bookUUID := params.ByName(id)
+	book, err := h.service.GetByID(r.Context(), bookUUID)
+	if err != nil {
+		return err
+	}
+	bookBytes, err := json.Marshal(book)
+	if err != nil {
+		return fmt.Errorf("failed to marshall user due error:%w", err)
+	}
+
+	w.Write(bookBytes)
+	w.WriteHeader(http.StatusOK)
+
+	return nil
+}
+
+func (h *handler) GetBookByName(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
+	var bookDto ToFindByNameDTO
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(&bookDto); err != nil {
+		return fmt.Errorf("failled to decode body from json body due error:%w", err)
+	}
+	//h.logs.Infof("GetUsersListsMethod")
+	books, err := h.service.GetByName(r.Context(), bookDto.Name)
+	if err != nil {
+		return err
+	}
+
+	usersbytes, err := json.Marshal(books)
+	if err != nil {
+		return fmt.Errorf("failed to marshall users due error:%w", err)
+	}
+
+	w.Write(usersbytes)
+	w.WriteHeader(http.StatusOK)
+
 	return nil
 }
 
