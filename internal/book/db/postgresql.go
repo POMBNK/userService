@@ -57,7 +57,7 @@ func (p *postgresDB) Create(ctx context.Context, book book.Book) (id string, err
 func (p *postgresDB) GetByID(ctx context.Context, id string) (book.Book, error) {
 	var bookUnit book.Book
 	q := `SELECT name, author_id FROM books WHERE id = $1`
-	err := p.client.QueryRow(ctx, q, id).Scan(&bookUnit.Name, &bookUnit.AuthorID)
+	err := p.client.QueryRow(ctx, q, id).Scan(&bookUnit.Name, &bookUnit.AuthorID.Id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return book.Book{}, apierror.ErrNotFound
@@ -84,6 +84,9 @@ func (p *postgresDB) GetByAuthor(ctx context.Context, authorID string) ([]book.B
 		books = append(books, bookUnit)
 	}
 	if err = booksRow.Err(); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierror.ErrNotFound
+		}
 		return nil, err
 	}
 	return books, nil
@@ -98,13 +101,16 @@ func (p *postgresDB) GetByName(ctx context.Context, bookName string) ([]book.Boo
 	books := make([]book.Book, 0)
 	for booksRow.Next() {
 		var bookUnit book.Book
-		err = booksRow.Scan(&bookUnit.Name)
+		err = booksRow.Scan(&bookUnit.Id, &bookUnit.AuthorID.Id)
 		if err != nil {
 			return nil, err
 		}
 		books = append(books, bookUnit)
 	}
 	if err = booksRow.Err(); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apierror.ErrNotFound
+		}
 		return nil, err
 	}
 
