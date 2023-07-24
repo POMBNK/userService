@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/POMBNK/restAPI/internal/book"
+	"github.com/POMBNK/restAPI/internal/pkg/apierror"
 	"github.com/POMBNK/restAPI/pkg/client/postgresql"
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"github.com/jackc/pgx/v5"
@@ -15,14 +16,11 @@ type postgresDB struct {
 	logs   *logger.Logger
 }
 
-func (p *postgresDB) Create(ctx context.Context, book book.Book, name, surname string) (id string, err error) {
+func (p *postgresDB) Create(ctx context.Context, book book.Book) (id string, err error) {
 	q := `SELECT DISTINCT id FROM authors WHERE name=$1 AND surname = $2`
-	err = p.client.QueryRow(ctx, q, name, surname).Scan(&book.AuthorID.Id)
+	err = p.client.QueryRow(ctx, q, book.AuthorID.Name, book.AuthorID.SurName).Scan(&book.AuthorID.Id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			book.AuthorID.Name = name
-			book.AuthorID.SurName = surname
-		} else {
+		if !errors.Is(err, pgx.ErrNoRows) {
 			return "", err
 		}
 	}
@@ -57,18 +55,60 @@ func (p *postgresDB) Create(ctx context.Context, book book.Book, name, surname s
 }
 
 func (p *postgresDB) GetByID(ctx context.Context, id string) (book.Book, error) {
-	//TODO implement me
-	panic("implement me")
+	var bookUnit book.Book
+	q := `SELECT name, author_id FROM books WHERE id = $1`
+	err := p.client.QueryRow(ctx, q, id).Scan(&bookUnit.Name, &bookUnit.AuthorID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return book.Book{}, apierror.ErrNotFound
+		}
+		return book.Book{}, err
+	}
+
+	return bookUnit, nil
 }
 
-func (p *postgresDB) GetByAuthor(ctx context.Context, author string) {
-	//TODO implement me
-	panic("implement me")
+func (p *postgresDB) GetByAuthor(ctx context.Context, authorID string) ([]book.Book, error) {
+	q := `SELECT name FROM books WHERE author_id = $1`
+	booksRow, err := p.client.Query(ctx, q, authorID)
+	if err != nil {
+		return nil, err
+	}
+	books := make([]book.Book, 0)
+	for booksRow.Next() {
+		var bookUnit book.Book
+		err = booksRow.Scan(&bookUnit.Name)
+		if err != nil {
+			return nil, err
+		}
+		books = append(books, bookUnit)
+	}
+	if err = booksRow.Err(); err != nil {
+		return nil, err
+	}
+	return books, nil
 }
 
-func (p *postgresDB) GetByName(ctx context.Context, userName string) {
-	//TODO implement me
-	panic("implement me")
+func (p *postgresDB) GetByName(ctx context.Context, bookName string) ([]book.Book, error) {
+	q := `SELECT id, author_id FROM books WHERE name = $1`
+	booksRow, err := p.client.Query(ctx, q, bookName)
+	if err != nil {
+		return nil, err
+	}
+	books := make([]book.Book, 0)
+	for booksRow.Next() {
+		var bookUnit book.Book
+		err = booksRow.Scan(&bookUnit.Name)
+		if err != nil {
+			return nil, err
+		}
+		books = append(books, bookUnit)
+	}
+	if err = booksRow.Err(); err != nil {
+		return nil, err
+	}
+
+	return books, nil
 }
 
 func NewPostgresDB(client postgresql.Client, logs *logger.Logger) book.Storage {
