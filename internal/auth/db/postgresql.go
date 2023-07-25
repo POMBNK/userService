@@ -30,6 +30,9 @@ func (d *postgresDB) Create(ctx context.Context, user auth.User) (string, error)
 		return "", fmt.Errorf("can not create user due error:%w", err)
 	}
 
+	d.logs.Debug("User created")
+	d.logs.Tracef("id of created user: %s \n", user.ID)
+
 	return user.ID, nil
 }
 
@@ -45,6 +48,8 @@ func (d *postgresDB) GetById(ctx context.Context, id string) (auth.User, error) 
 		}
 		return auth.User{}, err
 	}
+	d.logs.Debug("Get author by ID success")
+
 	return userUnit, nil
 }
 
@@ -60,6 +65,8 @@ func (d *postgresDB) GetByEmail(ctx context.Context, email string) (auth.User, e
 		}
 		return auth.User{}, err
 	}
+	d.logs.Debug("Get author by Email success")
+
 	return userUnit, nil
 }
 

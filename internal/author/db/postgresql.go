@@ -27,6 +27,9 @@ func (d *postgresDB) Create(ctx context.Context, author author.Author) (string, 
 		}
 		return "", fmt.Errorf("can not create user due error:%w", err)
 	}
+	d.logs.Debug("Author created")
+	d.logs.Tracef("id of created user: %s \n", author.Id)
+
 	return author.Id, nil
 }
 
@@ -43,6 +46,9 @@ func (d *postgresDB) GetById(ctx context.Context, id string) (author.Author, err
 		}
 		return author.Author{}, err
 	}
+
+	d.logs.Debugf("Author GetByID success")
+
 	return authorUnit, nil
 }
 
@@ -67,6 +73,8 @@ func (d *postgresDB) GetAll(ctx context.Context) ([]author.Author, error) {
 		return nil, err
 	}
 
+	d.logs.Debugf("Author GetAll success")
+
 	return allAuthors, nil
 }
 
@@ -82,6 +90,9 @@ func (d *postgresDB) Update(ctx context.Context, author author.Author) error {
 	if res.RowsAffected() != 1 {
 		return apierror.ErrNotFound
 	}
+
+	d.logs.Tracef("Matched and updated %v documents.\n", res.RowsAffected())
+
 	return nil
 }
 
@@ -96,6 +107,9 @@ func (d *postgresDB) Delete(ctx context.Context, id string) error {
 	if res.RowsAffected() != 1 {
 		return apierror.ErrNotFound
 	}
+
+	d.logs.Tracef("Deleted %v documents.\n", res.RowsAffected())
+
 	return nil
 }
 

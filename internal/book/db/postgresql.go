@@ -51,6 +51,10 @@ func (p *postgresDB) Create(ctx context.Context, book book.Book) (id string, err
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", err
 		}
+
+		p.logs.Debug("Book created")
+		p.logs.Tracef("id of created book: %s \n", id)
+
 		return "", fmt.Errorf("can not create user due error:%w", err)
 	}
 
@@ -69,6 +73,8 @@ func (p *postgresDB) GetByID(ctx context.Context, id string) (book.Book, error) 
 		}
 		return book.Book{}, err
 	}
+
+	p.logs.Debugf("Book GetByID success")
 
 	return bookUnit, nil
 }
@@ -96,6 +102,9 @@ func (p *postgresDB) GetByAuthor(ctx context.Context, authorID string) ([]book.B
 		}
 		return nil, err
 	}
+
+	p.logs.Debugf("Book GetByAuthor success")
+
 	return books, nil
 }
 
@@ -122,6 +131,8 @@ func (p *postgresDB) GetByName(ctx context.Context, bookName string) ([]book.Boo
 		}
 		return nil, err
 	}
+
+	p.logs.Debugf("Book GetByName success")
 
 	return books, nil
 }
