@@ -9,6 +9,7 @@ import (
 	"github.com/POMBNK/restAPI/pkg/client/postgresql"
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"github.com/jackc/pgx/v5"
+	"time"
 )
 
 type postgresDB struct {
@@ -18,6 +19,8 @@ type postgresDB struct {
 
 func (p *postgresDB) Create(ctx context.Context, book book.Book) (id string, err error) {
 	q := `SELECT DISTINCT id FROM authors WHERE name=$1 AND surname = $2`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	err = p.client.QueryRow(ctx, q, book.AuthorID.Name, book.AuthorID.SurName).Scan(&book.AuthorID.Id)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -57,6 +60,8 @@ func (p *postgresDB) Create(ctx context.Context, book book.Book) (id string, err
 func (p *postgresDB) GetByID(ctx context.Context, id string) (book.Book, error) {
 	var bookUnit book.Book
 	q := `SELECT name, author_id FROM books WHERE id = $1`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	err := p.client.QueryRow(ctx, q, id).Scan(&bookUnit.Name, &bookUnit.AuthorID.Id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -70,6 +75,8 @@ func (p *postgresDB) GetByID(ctx context.Context, id string) (book.Book, error) 
 
 func (p *postgresDB) GetByAuthor(ctx context.Context, authorID string) ([]book.Book, error) {
 	q := `SELECT name FROM books WHERE author_id = $1`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	booksRow, err := p.client.Query(ctx, q, authorID)
 	if err != nil {
 		return nil, err
@@ -94,6 +101,8 @@ func (p *postgresDB) GetByAuthor(ctx context.Context, authorID string) ([]book.B
 
 func (p *postgresDB) GetByName(ctx context.Context, bookName string) ([]book.Book, error) {
 	q := `SELECT id, author_id FROM books WHERE name = $1`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	booksRow, err := p.client.Query(ctx, q, bookName)
 	if err != nil {
 		return nil, err

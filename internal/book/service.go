@@ -20,7 +20,7 @@ type service struct {
 func (s *service) Create(ctx context.Context, dto ToCreateBookDTO) (string, error) {
 
 	book := CreateBookDto(dto)
-	// TODO: Check before has book already exist
+	// TODO: Check has book already exist before
 	id, err := s.storage.Create(ctx, book)
 	if err != nil {
 		return "", err
@@ -29,6 +29,7 @@ func (s *service) Create(ctx context.Context, dto ToCreateBookDTO) (string, erro
 }
 
 func (s *service) GetByID(ctx context.Context, id string) (Book, error) {
+	//TODO: Fill all fields in response
 	book, err := s.storage.GetByID(ctx, id)
 	if err != nil {
 		return Book{}, err
@@ -37,6 +38,7 @@ func (s *service) GetByID(ctx context.Context, id string) (Book, error) {
 }
 
 func (s *service) GetByAuthor(ctx context.Context, authorID string) ([]Book, error) {
+	//TODO: Fill all fields in response
 	books, err := s.storage.GetByAuthor(ctx, authorID)
 	if err != nil {
 		return nil, err
@@ -45,6 +47,7 @@ func (s *service) GetByAuthor(ctx context.Context, authorID string) ([]Book, err
 }
 
 func (s *service) GetByName(ctx context.Context, name string) ([]Book, error) {
+	//TODO: Fill all fields in response
 	books, err := s.storage.GetByName(ctx, name)
 	if err != nil {
 		return nil, err

@@ -44,13 +44,12 @@ func main() {
 	logs.Println("Router initialization...")
 	router := httprouter.New()
 	logs.Println("Router initialized.")
-	//TODO:problem with implementing storage for any entity other than user, should use global storage interface or smth...
-	//storage := getStorage(cfg, logs)
+
 	client, err := postgresql.NewClient(context.Background(), cfg)
 	if err != nil {
 		logs.Fatalln(err)
 	}
-
+	//TODO: encapsulate it in server domain
 	//users
 	userStorage := userDB.NewPostgresDB(client, logs)
 	userService := user.NewService(userStorage, logs)

@@ -17,6 +17,7 @@ const (
 	signUpURL = "/api/auth/sign_up"
 )
 
+// TODO: Add logging, tracing
 type handler struct {
 	logs    *logger.Logger
 	service Service

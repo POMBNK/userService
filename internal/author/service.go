@@ -13,6 +13,7 @@ type Service interface {
 	Delete(ctx context.Context, id string) error
 }
 
+// TODO: Add logging, tracing
 type service struct {
 	storage Storage
 	logs    *logger.Logger

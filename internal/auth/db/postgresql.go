@@ -9,6 +9,7 @@ import (
 	"github.com/POMBNK/restAPI/pkg/client/postgresql"
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"github.com/jackc/pgx/v5"
+	"time"
 )
 
 type postgresDB struct {
@@ -18,6 +19,8 @@ type postgresDB struct {
 
 func (d *postgresDB) Create(ctx context.Context, user auth.User) (string, error) {
 	q := `INSERT INTO users (username, password_hash, email)  VALUES ($1,$2,$3) RETURNING id`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	err := d.client.QueryRow(ctx, q, user.UserName,
 		user.PasswordHash, user.Email).Scan(&user.ID)
 	if err != nil {
@@ -33,6 +36,8 @@ func (d *postgresDB) Create(ctx context.Context, user auth.User) (string, error)
 func (d *postgresDB) GetById(ctx context.Context, id string) (auth.User, error) {
 	var userUnit auth.User
 	q := `SELECT username,password_hash,email FROM users WHERE id = $1`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	err := d.client.QueryRow(ctx, q, id).Scan(&userUnit.UserName, &userUnit.PasswordHash, &userUnit.Email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -46,6 +51,8 @@ func (d *postgresDB) GetById(ctx context.Context, id string) (auth.User, error) 
 func (d *postgresDB) GetByEmail(ctx context.Context, email string) (auth.User, error) {
 	var userUnit auth.User
 	q := `SELECT id,username,password_hash,email FROM users WHERE email = $1`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	err := d.client.QueryRow(ctx, q, email).Scan(&userUnit.ID, &userUnit.UserName, &userUnit.PasswordHash, &userUnit.Email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

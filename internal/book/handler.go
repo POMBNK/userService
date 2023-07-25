@@ -16,6 +16,7 @@ const (
 	bookURL  = "/api/books/:uuid"
 )
 
+// TODO: Add logging, tracing
 type handler struct {
 	service Service
 	logs    *logger.Logger
@@ -24,7 +25,9 @@ type handler struct {
 func (h *handler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodPost, booksURL, apierror.Middleware(h.CreateBook))
 	r.HandlerFunc(http.MethodGet, bookURL, apierror.Middleware(h.GetBookByID))
+	// TODO: GET or POST request?
 	r.HandlerFunc(http.MethodGet, booksURL, apierror.Middleware(h.GetBookByName))
+	// TODO: implement GET by author
 }
 
 func (h *handler) CreateBook(w http.ResponseWriter, r *http.Request) error {

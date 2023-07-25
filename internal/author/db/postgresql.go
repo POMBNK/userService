@@ -9,6 +9,7 @@ import (
 	"github.com/POMBNK/restAPI/pkg/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type postgresDB struct {
@@ -18,6 +19,8 @@ type postgresDB struct {
 
 func (d *postgresDB) Create(ctx context.Context, author author.Author) (string, error) {
 	q := `INSERT INTO authors (name, surname) VALUES ($1,$2) RETURNING id`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	if err := d.client.QueryRow(ctx, q).Scan(&author.Id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", err
@@ -28,8 +31,11 @@ func (d *postgresDB) Create(ctx context.Context, author author.Author) (string, 
 }
 
 func (d *postgresDB) GetById(ctx context.Context, id string) (author.Author, error) {
-	q := `SELECT id,name,surname FROM authors WHERE id = $1`
 	var authorUnit author.Author
+
+	q := `SELECT id,name,surname FROM authors WHERE id = $1`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	err := d.client.QueryRow(ctx, q, id).Scan(&authorUnit.Id, &authorUnit.Name, &authorUnit.SurName)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -42,6 +48,8 @@ func (d *postgresDB) GetById(ctx context.Context, id string) (author.Author, err
 
 func (d *postgresDB) GetAll(ctx context.Context) ([]author.Author, error) {
 	q := `SELECT id,name,surname FROM authors`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	rows, err := d.client.Query(ctx, q)
 	if err != nil {
 		return nil, err
@@ -58,14 +66,14 @@ func (d *postgresDB) GetAll(ctx context.Context) ([]author.Author, error) {
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
-	//if rows.CommandTag().RowsAffected() != 1 {
-	//	return nil, apierror.ErrNotFound
-	//}
+
 	return allAuthors, nil
 }
 
 func (d *postgresDB) Update(ctx context.Context, author author.Author) error {
 	q := `UPDATE authors SET name=$1, surname=$2 WHERE id = $3 `
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	//TODO:result from exec to logs.
 	res, err := d.client.Exec(ctx, q, author.Name, author.SurName, author.Id)
 	if err != nil {
@@ -79,6 +87,8 @@ func (d *postgresDB) Update(ctx context.Context, author author.Author) error {
 
 func (d *postgresDB) Delete(ctx context.Context, id string) error {
 	q := `DELETE FROM authors WHERE id = $1`
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	res, err := d.client.Exec(ctx, q, id)
 	if err != nil {
 		return err
