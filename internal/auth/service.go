@@ -20,6 +20,14 @@ type service struct {
 func (s *service) SignUP(ctx context.Context, dto ToSignUpUserDTO) (string, error) {
 	user := CreateSignUpUserDto(dto)
 
+	existedUser, err := s.storage.GetByEmail(ctx, user.Email)
+	if err != nil {
+		return "", fmt.Errorf("failed get user by email due error:%w", err)
+	}
+	if existedUser.Email == user.Email {
+		return "", fmt.Errorf("user with this email has already exist error:%w", err)
+	}
+
 	pswrd, err := hashPassword(dto.Password)
 	if err != nil {
 		return "", fmt.Errorf("failled due hashing password error:%w", err)
