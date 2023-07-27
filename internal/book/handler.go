@@ -25,8 +25,9 @@ type handler struct {
 func (h *handler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodPost, booksURL, apierror.Middleware(h.CreateBook))
 	r.HandlerFunc(http.MethodGet, bookURL, apierror.Middleware(h.GetBookByID))
-	// TODO: GET or POST request?
 	r.HandlerFunc(http.MethodGet, booksURL, apierror.Middleware(h.GetBookByName))
+	r.HandlerFunc(http.MethodGet, booksURL, apierror.Middleware(h.GetBookByAuthor))
+
 	// TODO: implement GET by author
 }
 
@@ -76,8 +77,31 @@ func (h *handler) GetBookByName(w http.ResponseWriter, r *http.Request) error {
 	if err := json.NewDecoder(r.Body).Decode(&bookDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)
 	}
-	//h.logs.Infof("GetUsersListsMethod")
 	books, err := h.service.GetByName(r.Context(), bookDto.Name)
+	if err != nil {
+		return err
+	}
+
+	usersbytes, err := json.Marshal(books)
+	if err != nil {
+		return fmt.Errorf("failed to marshall users due error:%w", err)
+	}
+
+	w.Write(usersbytes)
+	w.WriteHeader(http.StatusOK)
+
+	return nil
+}
+
+func (h *handler) GetBookByAuthor(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+
+	var bookDto ToFindByAuthorDTO
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(&bookDto); err != nil {
+		return fmt.Errorf("failled to decode body from json body due error:%w", err)
+	}
+	books, err := h.service.GetByAuthor(r.Context(), bookDto.Name)
 	if err != nil {
 		return err
 	}
