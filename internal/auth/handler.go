@@ -17,7 +17,6 @@ const (
 	signUpURL = "/api/auth/sign_up"
 )
 
-// TODO: Add logging, tracing
 type handler struct {
 	logs    *logger.Logger
 	service Service
@@ -38,10 +37,12 @@ func (h *handler) Register(r *httprouter.Router) {
 }
 
 func (h *handler) SignIn(w http.ResponseWriter, r *http.Request) error {
+	h.logs.Info("Sign in")
 	w.Header().Set("Content-Type", "application/json")
 
 	var userDto ToSignInUserDTO
 	defer r.Body.Close()
+	h.logs.Debug("Decode json to create user DTO")
 	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)
 	}
@@ -51,7 +52,7 @@ func (h *handler) SignIn(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(http.StatusUnauthorized)
 		return err
 	}
-
+	h.logs.Debug("generate JWT tokens")
 	tokenizer := jwt.NewTokenizer(os.Getenv("SECRET"))
 	pair, err := tokenizer.GeneratePair(user.ID)
 	if err != nil {
@@ -59,9 +60,11 @@ func (h *handler) SignIn(w http.ResponseWriter, r *http.Request) error {
 	}
 	acook, rcook := tokenizer.PrepareCookies(pair)
 
+	h.logs.Debug("Set JWT tokens to cookie")
 	http.SetCookie(w, acook)
 	http.SetCookie(w, rcook)
 
+	h.logs.Debug("marshal user")
 	userBytes, err := json.Marshal(user)
 	if err != nil {
 		return fmt.Errorf("failed to marshall user due error:%w", err)
@@ -74,9 +77,11 @@ func (h *handler) SignIn(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *handler) SignUp(w http.ResponseWriter, r *http.Request) error {
+	h.logs.Info("Sign up")
 	w.Header().Set("Content-Type", "application/json")
 
 	defer r.Body.Close()
+	h.logs.Debug("Decode json to user DTO")
 	var userDto ToSignUpUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&userDto); err != nil {
 		return fmt.Errorf("failled to decode body from json body due error:%w", err)

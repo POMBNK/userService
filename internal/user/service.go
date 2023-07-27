@@ -29,7 +29,6 @@ func (s *service) Create(ctx context.Context, dto ToCreateUserDTO) (string, erro
 	}
 	user.PasswordHash = pswrd
 	uuid, err := s.storage.Create(ctx, user)
-	//TODO: Check if errors are correct
 	if err != nil {
 		return uuid, err
 	}

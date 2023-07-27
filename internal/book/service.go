@@ -2,6 +2,7 @@ package book
 
 import (
 	"context"
+	"fmt"
 	"github.com/POMBNK/restAPI/pkg/logger"
 )
 
@@ -20,12 +21,18 @@ type service struct {
 func (s *service) Create(ctx context.Context, dto ToCreateBookDTO) (string, error) {
 
 	book := CreateBookDto(dto)
-	// TODO: Check has book already exist before
-	id, err := s.storage.Create(ctx, book)
+	existedBook, err := s.storage.GetByName(ctx, dto.Name)
 	if err != nil {
 		return "", err
 	}
-	return id, nil
+	if err = validateBook(existedBook, book); err != nil {
+		return "", err
+	}
+	uuid, err := s.storage.Create(ctx, book)
+	if err != nil {
+		return "", err
+	}
+	return uuid, nil
 }
 
 func (s *service) GetByID(ctx context.Context, id string) (Book, error) {
@@ -60,4 +67,13 @@ func NewService(storage Storage, logs *logger.Logger) Service {
 		storage: storage,
 		logs:    logs,
 	}
+}
+
+func validateBook(existedBook []Book, newBook Book) error {
+	for _, unitBook := range existedBook {
+		if unitBook.Id == newBook.Id && unitBook.Name == newBook.Name {
+			return fmt.Errorf("this book already exist")
+		}
+	}
+	return nil
 }

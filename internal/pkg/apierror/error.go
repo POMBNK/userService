@@ -38,7 +38,6 @@ func (e *ApiError) Marshal() []byte {
 	return bytes
 }
 
-// TODO:test
 func systemErr(developerMsg string) *ApiError {
 	return New("system error", developerMsg, "US-000500")
 }
